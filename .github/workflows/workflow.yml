@@ -1,8 +1,8 @@
 name: Publish Docker Image
 
 on:
-  push: # Pushes to master are used for deploying to beta.
-    branches: [ master ]
+  push: # Pushes to main or master brnach are used for deploying to beta.
+    branches: [ main, master ]
   release: # GitHub Releases are used for deploying to stable.
     types: [ published ]
 
