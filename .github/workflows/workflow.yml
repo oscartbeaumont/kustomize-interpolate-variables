@@ -1,0 +1,48 @@
+name: Publish Docker Image
+
+on:
+  push: # Pushes to master are used for deploying to beta.
+    branches: [ master ]
+  release: # GitHub Releases are used for deploying to stable.
+    types: [ published ]
+
+jobs:
+  api:
+    runs-on: ubuntu-latest
+    steps:
+    - uses: actions/checkout@v2
+    - name: Log in to the Container registry
+      uses: docker/login-action@v1
+      with:
+        registry: ghcr.io
+        username: ${{ github.repository_owner }}
+        password: ${{ secrets.GITHUB_TOKEN }}
+    - name: Determine image name & tag
+      run: |
+        if [ "$GITHUB_EVENT_NAME" == "release" ]; then
+          export IMAGE_TAG=${GITHUB_REF##*/}
+        else
+          export IMAGE_TAG=$(git rev-parse --short "$GITHUB_SHA")
+        fi
+        export GITHUB_REPOSITORY_LOWER=$(echo $GITHUB_REPOSITORY | awk '{print tolower($0)}')
+        export IMAGE_NAME="ghcr.io/$GITHUB_REPOSITORY_LOWER"
+        echo "IMAGE_NAME=$IMAGE_NAME" >> $GITHUB_ENV
+        echo "IMAGE_TAG=$IMAGE_TAG" >> $GITHUB_ENV
+        echo "Building $IMAGE_NAME:$IMAGE_TAG"
+    - name: Build & push API Docker image
+      working-directory: ./api
+      run: |
+        docker build . --file Dockerfile --tag $IMAGE_NAME:$IMAGE_TAG
+        docker push $IMAGE_NAME:$IMAGE_TAG
+    - name: Tag & push image as latest beta image
+      if: github.event_name != 'release'
+      working-directory: ./api
+      run: |
+        docker tag $IMAGE_NAME:$IMAGE_TAG $IMAGE_NAME:beta
+        docker push $IMAGE_NAME:beta
+    - name: Tag & push image as latest stable image
+      if: github.event_name == 'release'
+      working-directory: ./api
+      run: |
+        docker tag $IMAGE_NAME:$IMAGE_TAG $IMAGE_NAME:stable
+        docker push $IMAGE_NAME:stable

@@ -1,0 +1,24 @@
+apiVersion: kustomize.config.k8s.io/v1beta1
+kind: Kustomization
+
+transformers:
+ - |-
+  apiVersion: otbeaumont.me/v1
+  kind: InterpolateVariables
+  metadata:
+    name: notImportant
+    annotations:
+      config.kubernetes.io/function: |
+        container:
+          image: ghcr.io/oscartbeaumont/kustomize-interpolate-variables:latest
+
+  variables:
+    MY_HOST: example.com
+    REPLICAS: 5
+    TESTING: true
+  
+  templates:
+    TESTING: "{{ if . }}test-container{{else}}container{{ end }}"
+
+resources:
+  - ./test.yaml

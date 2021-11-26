@@ -1,0 +1,23 @@
+apiVersion: networking.k8s.io/v1
+kind: Ingress
+metadata:
+  name: myingress
+spec:
+  rules:
+  - host: $MY_HOST
+    http:
+      paths:
+      - pathType: Prefix
+        path: "/"
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: mydeployment
+spec:
+  replicas: $REPLICAS
+  template:
+    spec:
+      containers:
+      - name: $TESTING
+        image: alpine
