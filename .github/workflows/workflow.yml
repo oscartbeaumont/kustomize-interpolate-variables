@@ -7,7 +7,7 @@ on:
     types: [ published ]
 
 jobs:
-  api:
+  docker:
     runs-on: ubuntu-latest
     steps:
     - uses: actions/checkout@v2
@@ -29,20 +29,17 @@ jobs:
         echo "IMAGE_NAME=$IMAGE_NAME" >> $GITHUB_ENV
         echo "IMAGE_TAG=$IMAGE_TAG" >> $GITHUB_ENV
         echo "Building $IMAGE_NAME:$IMAGE_TAG"
-    - name: Build & push API Docker image
-      working-directory: ./api
+    - name: Build & push plugins Docker image
       run: |
         docker build . --file Dockerfile --tag $IMAGE_NAME:$IMAGE_TAG
         docker push $IMAGE_NAME:$IMAGE_TAG
     - name: Tag & push image as latest beta image
       if: github.event_name != 'release'
-      working-directory: ./api
       run: |
         docker tag $IMAGE_NAME:$IMAGE_TAG $IMAGE_NAME:beta
         docker push $IMAGE_NAME:beta
     - name: Tag & push image as latest stable image
       if: github.event_name == 'release'
-      working-directory: ./api
       run: |
         docker tag $IMAGE_NAME:$IMAGE_TAG $IMAGE_NAME:stable
         docker push $IMAGE_NAME:stable
